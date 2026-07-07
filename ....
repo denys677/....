@@ -1,0 +1,94 @@
+-- MM2 Legit Menu (mm2 by Menu t.me/menu_script)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LP = Players.LocalPlayer
+
+local Speed_Active = false
+local Jump_Active = false
+local InfJump = false
+local Noclip = false
+
+local SafeSpeed = 22 -- Безпечна швидкість, яка НЕ кікає в MM2
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 190, 0, 220)
+MainFrame.Position = UDim2.new(0.1, 0, 0.3, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "mm2 by Menu t.me/menu_script"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Title.TextScaled = true
+
+local function CreateButton(text, pos, callback)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(0, 170, 0, 35)
+    btn.Position = pos
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        btn.BackgroundColor3 = state and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(50, 50, 50)
+        callback(state)
+    end)
+    return btn
+end
+
+-- 1. БЕЗПЕЧНА ШВИДКІСТЬ (FIXED)
+CreateButton("Speed (Safe): OFF", UDim2.new(0, 10, 0, 45), function(val)
+    Speed_Active = val
+    if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+        LP.Character.Humanoid.WalkSpeed = Speed_Active and SafeSpeed or 16
+    end
+end)
+
+-- 2. ВИСОТА ПРЫЖКА
+CreateButton("Super Jump: OFF", UDim2.new(0, 10, 0, 85), function(val)
+    Jump_Active = val
+    if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+        LP.Character.Humanoid.JumpPower = Jump_Active and 90 or 50
+    end
+end)
+
+-- Повернення швидкості після респавну
+LP.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid")
+    if Speed_Active then hum.WalkSpeed = SafeSpeed end
+    if Jump_Active then hum.JumpPower = 90 end
+end)
+
+-- 3. БЕЗКЕНЕЧНИЙ СТРИБОК
+CreateButton("Inf Jump: OFF", UDim2.new(0, 10, 0, 125), function(val)
+    InfJump = val
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if InfJump and LP.Character and LP.Character:FindFirstChild("Humanoid") then
+        LP.Character.Humanoid:ChangeState("Jumping")
+    end
+end)
+
+-- 4. ПРОХІД СКРІЗЬ СТІНИ (Noclip)
+CreateButton("Noclip: OFF", UDim2.new(0, 10, 0, 165), function(val)
+    Noclip = val
+end)
+
+RunService.Stepped:Connect(function()
+    if Noclip and LP.Character then
+        for _, part in pairs(LP.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
